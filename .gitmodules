@@ -1,0 +1,8 @@
+[submodule "TechAscension"]
+	path = TechAscension
+	url = https://github.com/mightydanp/TechAscension.git
+	branch = master
+[submodule "TechCore"]
+	path = TechCore
+	url = https://github.com/mightydanp/TechCore.git
+	branch = master
