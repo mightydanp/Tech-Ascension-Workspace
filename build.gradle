@@ -11,7 +11,7 @@ gradle.afterProject { project ->
             filesMatching('META-INF/mods.toml') {
                 def lines = [
                     'modLoader="javafml"',
-                    'loaderVersion="' + loader_version_range + '"',
+                    'loaderVersion="' + project.loader_version_range + '"',
                     'issueTrackerURL="https://github.com/' + project.github_project + '/issues"',
                     'license="' + mod_license + '"',
                     '',
@@ -27,7 +27,7 @@ gradle.afterProject { project ->
                     '[[dependencies.' + project.mod_id + ']]',
                     '    modId="neoforge"',
                     '    type="required"',
-                    '    versionRange="' + project.forge_version_range + '"',
+                    '    versionRange="' + project.neo_version_range + '"',
                     '    ordering="NONE"',
                     '    side="BOTH"',
                     '',
@@ -79,7 +79,7 @@ gradle.afterProject { project ->
         
         project.jar {
             duplicatesStrategy = DuplicatesStrategy.INCLUDE
-            archiveFileName.set(project.mod_name + "_FORGE_v" + project.mod_version + "_mc" + project.minecraft_version + ".jar")
+            archiveFileName.set(project.mod_name + "_NEOFORGE_v" + project.mod_version + "_mc" + project.minecraft_version + ".jar")
             manifest {
                 attributes([
                     "Specification-Title": project.mod_name,
