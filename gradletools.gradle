@@ -116,7 +116,7 @@ ext.cfdeps = { optional, required, versions ->
 ext.at = {
     minecraft {
         accessTransformers {
-            file('src/main/resources/META-INF/accesstransformer.cfg')
+            file('src/main/resources/accesstransformer.cfg')
         }
     }
 }
