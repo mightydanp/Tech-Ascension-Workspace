@@ -11,5 +11,6 @@ plugins {
 }
 
 rootProject.name = 'Tech-Ascension-Workspace'
+
 include 'TechCore'
 include 'TechAscension'
