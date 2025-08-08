@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component>
+  <configuration default="false" factoryName="Application" name="TechAscension runServer" singleton="false" type="Application">
+    <option name="MAIN_CLASS_NAME" value="net.minecraftforge.bootstrap.ForgeBootstrap"/>
+    <option name="VM_PARAMETERS" value="-Dmixin.env.remapRefMap=true -Dmixin.env.refMapRemappingFile=D:\Games\Minecraft\Coding\Tech-Ascension-Workspace\TechAscension/build/createSrgToMcp/output.srg -Dnet.minecraftforge.gradle.GradleStart.srg.srg-mcp=D:\Games\Minecraft\Coding\Tech-Ascension-Workspace\TechAscension\build\createSrgToMcp\output.srg -Dforge.enableGameTest=true -Djava.net.preferIPv6Addresses=system"/>
+    <option name="PROGRAM_PARAMETERS" value="--launchTarget forge_userdev_server --gameDir . --mixin.config techascension.mixins.json"/>
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$\TechAscension\run"/>
+    <module name="TechAscension.main"/>
+    <envs>
+      <env name="MOD_CLASSES" value="TechCore%%$PROJECT_DIR$\TechCore\build\resources\main;TechCore%%$PROJECT_DIR$\TechCore\build\classes\java\main"/>
+      <env name="MCP_MAPPINGS" value="official_1.21.1"/>
+    </envs>
+    <method v="2">
+      <option enabled="true" name="Make"/>
+      <option enabled="true" externalProjectPath="$PROJECT_DIR$" name="Gradle.BeforeRunTask" tasks=":TechAscension:prepareRunServerCompile"/>
+    </method>
+  </configuration>
+</component>

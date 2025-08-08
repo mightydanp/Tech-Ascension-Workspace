@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component>
+  <configuration default="false" factoryName="Application" name="TechCore runClient" singleton="false" type="Application">
+    <option name="MAIN_CLASS_NAME" value="net.minecraftforge.bootstrap.ForgeBootstrap"/>
+    <option name="VM_PARAMETERS" value="-Dforge.logging.console.level=debug -Dforge.logging.markers= -Dmixin.env.remapRefMap=true -Dmixin.env.refMapRemappingFile=D:\Games\Minecraft\Coding\Tech-Ascension-Workspace\TechCore/build/createSrgToMcp/output.srg -Dnet.minecraftforge.gradle.GradleStart.srg.srg-mcp=D:\Games\Minecraft\Coding\Tech-Ascension-Workspace\TechCore\build\createSrgToMcp\output.srg -Dforge.enableGameTest=true -Djava.net.preferIPv6Addresses=system -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump"/>
+    <option name="PROGRAM_PARAMETERS" value="--launchTarget forge_userdev_client --version MOD_DEV --assetIndex 17 --assetsDir C:\Users\Chris\.gradle\caches\forge_gradle\assets --gameDir . --mixin.config techcore.mixins.json"/>
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$\TechCore\run"/>
+    <module name="TechCore.main"/>
+    <envs>
+      <env name="MOD_CLASSES" value="$PROJECT_DIR$\TechCore\build\resources\main;$PROJECT_DIR$\TechCore\build\classes\java\main"/>
+      <env name="MCP_MAPPINGS" value="official_1.21.1"/>
+    </envs>
+    <method v="2">
+      <option enabled="true" name="Make"/>
+      <option enabled="true" externalProjectPath="$PROJECT_DIR$" name="Gradle.BeforeRunTask" tasks=":TechCore:prepareRunClientCompile"/>
+    </method>
+  </configuration>
+</component>

@@ -1,0 +1,19 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="TechAscension runClient" type="Application" factoryName="Application" singleton="false">
+    <option name="ALTERNATIVE_JRE_PATH" value="temurin-21" />
+    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+    <envs>
+      <env name="MOD_CLASSES" value="TechCore%%$PROJECT_DIR$/../Tech-Ascension-Workspace\TechCore\build\resources\main;TechCore%%$PROJECT_DIR$/../Tech-Ascension-Workspace\TechCore\build\classes\java\main" />
+      <env name="MCP_MAPPINGS" value="official_1.21.1" />
+    </envs>
+    <option name="MAIN_CLASS_NAME" value="net.minecraftforge.bootstrap.ForgeBootstrap" />
+    <module name="Tech-Ascension-Workspace.TechAscension.main" />
+    <option name="PROGRAM_PARAMETERS" value="--launchTarget forge_userdev_client --version MOD_DEV --assetIndex 17 --assetsDir C:\Users\Chris\.gradle\caches\forge_gradle\assets --gameDir . --mixin.config techascension.mixins.json" />
+    <option name="VM_PARAMETERS" value="-Dmixin.env.remapRefMap=true -Dmixin.env.refMapRemappingFile=D:\Games\Minecraft\Coding\Tech-Ascension-Workspace\TechAscension/build/createSrgToMcp/output.srg -Dnet.minecraftforge.gradle.GradleStart.srg.srg-mcp=D:\Games\Minecraft\Coding\Tech-Ascension-Workspace\TechAscension\build\createSrgToMcp\output.srg -Dforge.enableGameTest=true -Djava.net.preferIPv6Addresses=system -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/TechAscension/run" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+      <option name="Gradle.BeforeRunTask" enabled="true" tasks=":TechAscension:prepareRunClientCompile" externalProjectPath="$PROJECT_DIR$" />
+    </method>
+  </configuration>
+</component>
