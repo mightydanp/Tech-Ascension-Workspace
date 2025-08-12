@@ -1,14 +1,3 @@
-project.ext.set("mod_group_id", 'com.mightydanp')
-project.ext.set("mod_authors", 'MightyDanp')
-project.ext.set("minecraft_version", '1.21.1')
-project.ext.set("minecraft_version_range", '[1.21,1.22)')
-project.ext.set("parchment_version", '2024.07.28')
-project.ext.set("parchment_minecraft_version", '1.21')
-project.ext.set("neo_version", '21.1.115')
-project.ext.set("neo_version_range", '[21.1,)')
-project.ext.set("loader_version_range", '[4,)')
-project.ext.set("jei_version", '19.9.1.125')
-
 ext.getChangelogText =  {
     def changelogFile = file('changelog.txt')
     String str = ''
@@ -21,7 +10,7 @@ ext.getChangelogText =  {
         if (it.size() > 1) {
             def temp = it
             if (lineCount == 0) {
-                temp = "${mod_name} ${version}"
+                temp = "${modname} ${version}"
                 temp = "<h2>$temp</h2>"
             } else if (it.startsWith('-')) {
                 temp = "&nbsp;&nbsp;&nbsp;$temp"
@@ -42,9 +31,11 @@ ext.getChangelogText =  {
 
 ext.repos = {
     repositories {
-        mavenLocal()
         maven { url "https://maven.blamejared.com" }    // Patchouli, bookshelf, gamestages, JEI
         //maven { url "https://dvs1.progwml6.com/files/maven" } // JEI
+        maven { url "https://modmaven.dev/" } // McJtyLib, TOP
+        maven { url 'https://maven.minecraftforge.net/' } // Serene Seasons
+        maven { url "https://maven.theillusivec4.top/" } // Curios
     }
 }
 
@@ -52,110 +43,56 @@ ext.parch = {
     dependencies {
         subsystems {
             parchment {
-                minecraftVersion = ${parchment_minecraft_version}
-                mappingsVersion = ${parchment_version}
+                minecraftVersion = rootProject.findProperty('parchment_minecraft_version')
+                mappingsVersion = rootProject.findProperty('parchment_version')
             }
         }
     }
 }
 
 ext.mc = {
-    dependencies.implementation "net.neoforged:neoforge:${neo_version}"
+    dependencies.minecraft "net.minecraftforge:forge:${rootProject.findProperty('minecraft_version')}-${rootProject.findProperty('forge_version')}"
+
 }
 
 ext.jei = {
-    dependencies.compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
-    dependencies.compileOnly "mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}"
-    dependencies.runtimeOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
+    dependencies.compileOnly fg.deobf("mezz.jei:jei-${rootProject.findProperty('minecraft_version')}-common-api:${rootProject.findProperty('jei_version')}")
+    dependencies.compileOnly fg.deobf("mezz.jei:jei-${rootProject.findProperty('minecraft_version')}-forge-api:${rootProject.findProperty('jei_version')}")
+    dependencies.runtimeOnly fg.deobf("mezz.jei:jei-${rootProject.findProperty('minecraft_version')}-forge:${rootProject.findProperty('jei_version')}")
 }
 
-ext.modrinth = { opt, req, versions ->
-    tasks.modrinth.enabled = project.hasProperty('modrinth_token')
-    modrinth {
-        if (project.hasProperty('modrinth_token')) {
-            token = project.modrinth_token
-        }
-        projectId = project.projectSlug
-        versionType = project.curse_type
-        versionName = "${mod_name} - ${version}"
-        uploadFile = jar
-        gameVersions = [project.minecraft_version] + versions
-        changelog = System.getenv('CHANGELOG') == null || System.getenv('CHANGELOG').equals('none') ? getChangelogText() : System.getenv('CHANGELOG')
-        dependencies {
-            opt.each { lib ->
-                optional.project lib
-            }
-            req.each { lib ->
-                required.project lib
-            }
-        }
-    }
-}
-
-ext.cfdeps = { optional, required, versions ->
-    tasks.curseforge.enabled = project.hasProperty('curseforge_key')
-    curseforge {
-        if (project.hasProperty('curseforge_key')) {
-            apiKey = project.curseforge_key
-        }
-
-        project {
-            id = project.projectId
-            changelog = System.getenv('CHANGELOG') == null || System.getenv('CHANGELOG').equals('none') ? getChangelogText() : System.getenv('CHANGELOG')
-            changelogType = 'html'
-            releaseType = project.curse_type
-            addGameVersion project.minecraft_version
-            versions.each { v ->
-                addGameVersion v
-            }
-            mainArtifact(jar) {
-                displayName = "${mod_name} - ${version}"
-            }
-            if (optional.size() > 0 || required.size() > 0) {
-                relations {
-                    optional.each { lib ->
-                        optionalLibrary lib
-                    }
-                    required.each { lib ->
-                        requiredDependency lib
-                    }
-                }
-            }
-        }
-    }
-}
-
-ext.at = {
+ext.runs = { name ->
     minecraft {
-        accessTransformers {
-            file('src/main/resources/META-INF/accesstransformer.cfg')
-        }
-    }
-}
+        //mappings channel: 'parchment', version: "${rootProject.findProperty('parchment_version')}-${rootProject.findProperty('parchment_minecraft_version')}"
+        mappings channel: rootProject.findProperty('mapping_channel'), version: rootProject.findProperty('mapping_version')
+        accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
-ext.runs = {
-    runs {
-        configureEach {
-            systemProperty 'forge.logging.markers', 'REGISTRIES'
-            systemProperty 'forge.logging.console.level', 'debug'
-            modSource project.sourceSets.main
-        }
-
-        client {
-            systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
-        }
-
-        server {
-            systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
-            argument '--nogui'
-        }
-
-        gameTestServer {
-            systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
-        }
-
-        data {
-            arguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        runs {
+            client = {
+                property 'mixin.env.remapRefMap', 'true'
+                property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+                properties 'forge.logging.markers': ''
+                properties 'forge.logging.console.level': 'debug'
+                workingDirectory project.file('run').canonicalPath
+                source sourceSets.main
+            }
+            server = {
+                property 'mixin.env.remapRefMap', 'true'
+                property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+                properties 'forge.logging.markers': ''
+                properties 'forge.logging.console.level': 'debug'
+                workingDirectory project.file('run').canonicalPath
+                source sourceSets.main
+            }
+            data = {
+                property 'mixin.env.remapRefMap', 'true'
+                property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+                workingDirectory project.file('run').canonicalPath
+                property 'forge.logging.markers', ''
+                property 'forge.logging.console.level', 'debug'
+                args '--mod', name, '--all', '--output', file('src/generated/resources/'), '--existing', sourceSets.main.resources.srcDirs[0]
+                source sourceSets.main
+            }
         }
     }
 }
@@ -165,12 +102,11 @@ ext.jars = {
         duplicatesStrategy = DuplicatesStrategy.INCLUDE
         manifest {
             attributes([
-                    "Specification-Title"     : project.mod_id,
-                    "Specification-Vendor"    : project.mod_authors,
-                    "Specification-Version"   : "1", // We are version 1 of ourselves
+                    "Specification-Title"     : project.findProperty('mod_id'),
+                    "Specification-Vendor"    : project.findProperty('mod_authors'),
                     "Implementation-Title"    : project.name,
                     "Implementation-Version"  : project.jar.archiveVersion,
-                    "Implementation-Vendor"   : project.mod_authors,
+                    "Implementation-Vendor"   : project.findProperty('mod_authors'),
                     "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
             ])
         }
