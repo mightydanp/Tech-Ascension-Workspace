@@ -27,3 +27,4 @@ run/
 /Users/
 
 !/gradle/wrapper/gradle-wrapper.jar
+/CLAUDE.md
