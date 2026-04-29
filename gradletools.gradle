@@ -1,41 +1,11 @@
-ext.getChangelogText =  {
-    def changelogFile = file('changelog.txt')
-    String str = ''
-    int lineCount = 0
-    boolean done = false
-    changelogFile.eachLine {
-        if (done || it == null) {
-            return
-        }
-        if (it.size() > 1) {
-            def temp = it
-            if (lineCount == 0) {
-                temp = "${modname} ${version}"
-                temp = "<h2>$temp</h2>"
-            } else if (it.startsWith('-')) {
-                temp = "&nbsp;&nbsp;&nbsp;$temp"
-                temp = temp.replaceAll("(\\S+\\/\\S+)#([0-9]+)\\b", "<a href=\"https://github.com/\$1/issues/\$2\">\$0</a>");
-                temp = temp.replaceAll("#([0-9]+)\\b(?!<\\/a>)", "<a href=\"https://github.com/$github_project/issues/\$1\">\$0</a>");
-            } else {
-                temp = "<h4>$temp</h4>"
-            }
-            str += "$temp<br/>"
-            lineCount++
-            return
-        } else {
-            done = true
-        }
-    }
-    return str
-}
-
 ext.repos = {
     repositories {
-        maven { url "https://maven.blamejared.com" }    // Patchouli, bookshelf, gamestages, JEI
-        //maven { url "https://dvs1.progwml6.com/files/maven" } // JEI
-        maven { url "https://modmaven.dev/" } // McJtyLib, TOP
-        maven { url 'https://maven.minecraftforge.net/' } // Serene Seasons
-        maven { url "https://maven.theillusivec4.top/" } // Curios
+        maven { url = "https://dvs1.progwml6.com/files/maven" }      // JEI (legacy mirror)
+        maven { url = "https://maven.blamejared.com" }                // Patchouli, bookshelf, gamestages, JEI
+        maven { url = "https://modmaven.dev/" }                       // McJtyLib, TOP
+        maven { url = "https://maven.k-4u.nl" }                       // McJtyLib, TOP (alt)
+        maven { url = 'https://maven.minecraftforge.net/' }           // Serene Seasons
+        maven { url = "https://maven.theillusivec4.top/" }            // Curios
     }
 }
 
@@ -52,13 +22,72 @@ ext.parch = {
 
 ext.mc = {
     dependencies.minecraft "net.minecraftforge:forge:${rootProject.findProperty('minecraft_version')}-${rootProject.findProperty('forge_version')}"
-
 }
 
 ext.jei = {
     dependencies.compileOnly fg.deobf("mezz.jei:jei-${rootProject.findProperty('minecraft_version')}-common-api:${rootProject.findProperty('jei_version')}")
     dependencies.compileOnly fg.deobf("mezz.jei:jei-${rootProject.findProperty('minecraft_version')}-forge-api:${rootProject.findProperty('jei_version')}")
     dependencies.runtimeOnly fg.deobf("mezz.jei:jei-${rootProject.findProperty('minecraft_version')}-forge:${rootProject.findProperty('jei_version')}")
+}
+
+ext.commonSetup = {
+    base {
+        archivesName = project.findProperty('mod_id')
+    }
+    version = project.findProperty('mod_version')
+    group = project.findProperty('mod_group')
+    java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+    sourceSets.main.resources { srcDir 'src/generated/resources' }
+}
+
+ext.mixinDep = {
+    dependencies.annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+}
+
+ext.mixinSetup = {
+    mixin {
+        add sourceSets.main, "${project.findProperty('mod_id')}.refmap.json"
+        config project.findProperty('mod_mixins_config_location')
+    }
+}
+
+ext.commonDeps = {
+    mc()
+    jei()
+    mixinDep()
+}
+
+ext.minecraftSetup = { Closure modsConfig ->
+    minecraft {
+        mappings channel: rootProject.findProperty('mapping_channel'), version: rootProject.findProperty('mapping_version')
+        accessTransformer = file('workspace/accesstransformer.cfg')
+
+        runs {
+            client {
+                configureRun(delegate)
+                mods modsConfig
+            }
+            server {
+                configureRun(delegate)
+                mods modsConfig
+            }
+            gameTestServer {
+                property 'forge.enabledGameTestNamespaces', project.findProperty('mod_id')
+            }
+            data {
+                configureRun(delegate)
+                args '--all', '--output', file('src/generated/resources/'), '--existing', sourceSets.main.resources.srcDirs[0]
+                mods modsConfig
+            }
+        }
+    }
+}
+
+ext.configureRun = { runConfig ->
+    runConfig.property 'forge.enabledGameTestNamespaces', project.findProperty('mod_id')
+    runConfig.workingDirectory project.file('run')
+    runConfig.property 'mixin.env.remapRefMap', 'true'
+    runConfig.property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
 }
 
 ext.runs = { name ->
@@ -113,11 +142,40 @@ ext.jars = {
     }
 }
 
+ext.commonProcessResources = { Map extraProperties = [:] ->
+    tasks.named('processResources', ProcessResources).configure {
+        var replaceProperties = [
+                minecraft_version                     : rootProject.findProperty('minecraft_version'),
+                minecraft_version_range               : rootProject.findProperty('minecraft_version_range'),
+                forge_version                         : rootProject.findProperty('forge_version'),
+                forge_version_range                   : rootProject.findProperty('forge_version_range'),
+                loader_version_range                  : rootProject.findProperty('loader_version_range'),
+                mod_id                                : project.findProperty('mod_id'),
+                mod_name                              : project.findProperty('mod_name'),
+                mod_license                           : project.findProperty('mod_license'),
+                mod_version                           : project.findProperty('mod_version'),
+                mod_authors                           : project.findProperty('mod_authors'),
+                mod_description                       : project.findProperty('mod_description'),
+                mod_issue_tracker_url                 : project.findProperty('mod_issue_tracker_url'),
+                mod_access_transformers_file_location : project.findProperty('mod_access_transformers_file_location'),
+                mod_mixins_config_location            : project.findProperty('mod_mixins_config_location'),
+        ] + extraProperties
+        inputs.properties replaceProperties
+        filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
+            expand replaceProperties + [project: project]
+        }
+    }
+}
+
+ext.reobfArtifact = {
+    def reobfFile = file("$buildDir/reobfJar/output.jar")
+    artifacts.add('default', reobfFile) {
+        type = 'jar'
+        builtBy 'reobfJar'
+    }
+}
+
 ext.publish = {
-    // Example configuration to allow publishing using the maven-publish task
-    // we define a custom artifact that is sourced from the reobfJar output task
-    // and then declare that to be published
-    // Note you'll need to add a repository here
     def reobfFile = file("$buildDir/reobfJar/output.jar")
     def reobfArtifact = artifacts.add('default', reobfFile) {
         type 'jar'
