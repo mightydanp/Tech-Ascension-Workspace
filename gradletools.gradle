@@ -1,3 +1,19 @@
+// ============================================================
+// gradletools.gradle — Shared build utilities for Tech Core and
+// Tech Ascension subprojects.
+//
+// Addon mod developers: apply this file in your own build.gradle
+// to reuse these helpers:
+//   apply from: 'path/to/gradletools.gradle'
+//
+// Then call the helpers you need (see each section below).
+// ============================================================
+
+
+// ── Repositories ─────────────────────────────────────────────
+// Registers the Maven repositories needed to resolve Forge, JEI,
+// and other mod dependencies. Call repos() at the top of your
+// subproject build.gradle before any dependency declarations.
 ext.repos = {
     repositories {
         maven { url = "https://dvs1.progwml6.com/files/maven" }      // JEI (legacy mirror)
@@ -9,27 +25,13 @@ ext.repos = {
     }
 }
 
-ext.parch = {
-    dependencies {
-        subsystems {
-            parchment {
-                minecraftVersion = rootProject.findProperty('parchment_minecraft_version')
-                mappingsVersion = rootProject.findProperty('parchment_version')
-            }
-        }
-    }
-}
 
-ext.mc = {
-    dependencies.minecraft "net.minecraftforge:forge:${rootProject.findProperty('minecraft_version')}-${rootProject.findProperty('forge_version')}"
-}
-
-ext.jei = {
-    dependencies.compileOnly fg.deobf("mezz.jei:jei-${rootProject.findProperty('minecraft_version')}-common-api:${rootProject.findProperty('jei_version')}")
-    dependencies.compileOnly fg.deobf("mezz.jei:jei-${rootProject.findProperty('minecraft_version')}-forge-api:${rootProject.findProperty('jei_version')}")
-    dependencies.runtimeOnly fg.deobf("mezz.jei:jei-${rootProject.findProperty('minecraft_version')}-forge:${rootProject.findProperty('jei_version')}")
-}
-
+// ── Project Setup ─────────────────────────────────────────────
+// Applies common project settings from gradle.properties:
+//   mod_id, mod_version, mod_group, and Java 17 toolchain.
+// Also registers src/generated/resources as a resource directory
+// so datagen output is included in the compiled mod.
+// Call commonSetup() near the top of your subproject build.gradle.
 ext.commonSetup = {
     base {
         archivesName = project.findProperty('mod_id')
@@ -40,10 +42,44 @@ ext.commonSetup = {
     sourceSets.main.resources { srcDir 'src/generated/resources' }
 }
 
+
+// ── Individual Dependencies ───────────────────────────────────
+// These can be called individually or all at once via commonDeps().
+
+// Adds the Minecraft + Forge dependency. Required for all mods.
+// Version is pulled from minecraft_version and forge_version in gradle.properties.
+ext.mc = {
+    dependencies.minecraft "net.minecraftforge:forge:${rootProject.findProperty('minecraft_version')}-${rootProject.findProperty('forge_version')}"
+}
+
+// Adds JEI as a compile-only API and runtime dependency.
+// Remove jei() from your commonDeps call if your mod does not integrate with JEI.
+ext.jei = {
+    dependencies.compileOnly fg.deobf("mezz.jei:jei-${rootProject.findProperty('minecraft_version')}-common-api:${rootProject.findProperty('jei_version')}")
+    dependencies.compileOnly fg.deobf("mezz.jei:jei-${rootProject.findProperty('minecraft_version')}-forge-api:${rootProject.findProperty('jei_version')}")
+    dependencies.runtimeOnly fg.deobf("mezz.jei:jei-${rootProject.findProperty('minecraft_version')}-forge:${rootProject.findProperty('jei_version')}")
+}
+
+// Adds the Mixin annotation processor. Required if your mod uses Mixins.
 ext.mixinDep = {
     dependencies.annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
 
+// Convenience wrapper: adds Forge, JEI, and Mixin in one call.
+// Call commonDeps() in your dependencies block instead of the three above individually.
+ext.commonDeps = {
+    mc()
+    jei()
+    mixinDep()
+}
+
+
+// ── Mixin Configuration ───────────────────────────────────────
+// Registers your mod's mixin config file and refmap with MixinGradle.
+// Only call mixinSetup() if your mod uses Mixins.
+// Requires in gradle.properties:
+//   mod_id                    — used to name the refmap file
+//   mod_mixins_config_location — path to your .mixins.json file
 ext.mixinSetup = {
     mixin {
         add sourceSets.main, "${project.findProperty('mod_id')}.refmap.json"
@@ -51,16 +87,36 @@ ext.mixinSetup = {
     }
 }
 
-ext.commonDeps = {
-    mc()
-    jei()
-    mixinDep()
-}
 
-ext.minecraftSetup = { Closure modsConfig ->
+// ── Minecraft Run Configuration ───────────────────────────────
+// Sets up the minecraft {} block with client, server, data, and
+// gameTestServer run configurations.
+//
+// Parameters:
+//   useParchment — true  = ParchmentMC mappings (human-readable parameter names)
+//                  false = official Mojang mappings
+//   modsConfig   — closure listing all mod sources loaded at runtime.
+//                  Include your mod AND any mods it depends on so they are
+//                  all active in the dev client/server simultaneously.
+//
+// Example (single mod, official mappings):
+//   minecraftSetup(false) {
+//       "yourmodid" { source sourceSets.main }
+//   }
+//
+// Example (depending on TechCore at runtime):
+//   minecraftSetup(false) {
+//       "yourmodid" { source sourceSets.main }
+//       "techcore"  { source project(":TechCore").sourceSets.main }
+//   }
+ext.minecraftSetup = { boolean useParchment, Closure modsConfig ->
     minecraft {
-        mappings channel: rootProject.findProperty('mapping_channel'), version: rootProject.findProperty('mapping_version')
-        accessTransformer = file('workspace/accesstransformer.cfg')
+        if (useParchment) {
+            mappings channel: 'parchment', version: "${rootProject.findProperty('parchment_version')}-${rootProject.findProperty('parchment_minecraft_version')}"
+        } else {
+            mappings channel: rootProject.findProperty('mapping_channel'), version: rootProject.findProperty('mapping_version')
+        }
+        accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
         runs {
             client {
@@ -83,49 +139,22 @@ ext.minecraftSetup = { Closure modsConfig ->
     }
 }
 
+// Internal helper called by minecraftSetup() for each run config.
+// Applies working directory, mixin remapping, and Forge logging settings.
+// Not intended to be called directly.
 ext.configureRun = { runConfig ->
     runConfig.property 'forge.enabledGameTestNamespaces', project.findProperty('mod_id')
     runConfig.workingDirectory project.file('run')
     runConfig.property 'mixin.env.remapRefMap', 'true'
     runConfig.property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+    runConfig.properties 'forge.logging.markers': ''
+    runConfig.properties 'forge.logging.console.level': 'debug'
 }
 
-ext.runs = { name ->
-    minecraft {
-        //mappings channel: 'parchment', version: "${rootProject.findProperty('parchment_version')}-${rootProject.findProperty('parchment_minecraft_version')}"
-        mappings channel: rootProject.findProperty('mapping_channel'), version: rootProject.findProperty('mapping_version')
-        accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
-        runs {
-            client = {
-                property 'mixin.env.remapRefMap', 'true'
-                property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-                properties 'forge.logging.markers': ''
-                properties 'forge.logging.console.level': 'debug'
-                workingDirectory project.file('run').canonicalPath
-                source sourceSets.main
-            }
-            server = {
-                property 'mixin.env.remapRefMap', 'true'
-                property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-                properties 'forge.logging.markers': ''
-                properties 'forge.logging.console.level': 'debug'
-                workingDirectory project.file('run').canonicalPath
-                source sourceSets.main
-            }
-            data = {
-                property 'mixin.env.remapRefMap', 'true'
-                property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-                workingDirectory project.file('run').canonicalPath
-                property 'forge.logging.markers', ''
-                property 'forge.logging.console.level', 'debug'
-                args '--mod', name, '--all', '--output', file('src/generated/resources/'), '--existing', sourceSets.main.resources.srcDirs[0]
-                source sourceSets.main
-            }
-        }
-    }
-}
-
+// ── JAR Manifest ──────────────────────────────────────────────
+// Embeds mod metadata (ID, version, author, timestamp) into the
+// built JAR manifest. Call ext.jars() after minecraftSetup().
 ext.jars = {
     jar {
         duplicatesStrategy = DuplicatesStrategy.INCLUDE
@@ -142,6 +171,22 @@ ext.jars = {
     }
 }
 
+
+// ── Resource Processing ───────────────────────────────────────
+// Replaces ${token} placeholders in META-INF/mods.toml and
+// pack.mcmeta with values from gradle.properties at build time.
+//
+// The optional extraProperties map lets you inject additional
+// tokens for mods that declare dependencies on other mods.
+//
+// Basic usage (standalone mod):
+//   commonProcessResources()
+//
+// With a dependency mod version range (e.g. depends on TechCore):
+//   commonProcessResources([
+//       tech_core_mod_id        : project.findProperty('tech_core_mod_id'),
+//       tech_core_version_range : project.findProperty('tech_core_version_range'),
+//   ])
 ext.commonProcessResources = { Map extraProperties = [:] ->
     tasks.named('processResources', ProcessResources).configure {
         var replaceProperties = [
@@ -167,6 +212,11 @@ ext.commonProcessResources = { Map extraProperties = [:] ->
     }
 }
 
+
+// ── Reobfuscation Artifact ────────────────────────────────────
+// Registers the reobfuscated JAR (the final distributable mod file)
+// as the default Gradle artifact for this project.
+// Always call reobfArtifact() at the end of your subproject build.gradle.
 ext.reobfArtifact = {
     def reobfFile = file("$buildDir/reobfJar/output.jar")
     artifacts.add('default', reobfFile) {
@@ -175,6 +225,12 @@ ext.reobfArtifact = {
     }
 }
 
+
+// ── Maven Publishing (optional) ───────────────────────────────
+// Publishes the reobfuscated JAR to a local Maven repository under
+// the project directory (mcmodsrepo/). Other projects can then
+// depend on this mod via Maven coordinates instead of a file path.
+// Only needed if you are distributing this mod as a library.
 ext.publish = {
     def reobfFile = file("$buildDir/reobfJar/output.jar")
     def reobfArtifact = artifacts.add('default', reobfFile) {

@@ -1,22 +1,42 @@
+// ============================================================
+// build.gradle — Root project build script
+//
+// This file configures the build toolchain for the entire
+// workspace. It must stay in the root directory and must not
+// be merged into subproject build.gradle files or gradletools.gradle,
+// because Gradle resolves the buildscript classpath before any
+// other scripts run.
+//
+// Addon mod developers: you need an equivalent root build.gradle
+// in your own workspace with the same buildscript block so Gradle
+// can locate ForgeGradle, ParchmentMC, and MixinGradle before
+// evaluating any subproject scripts.
+// ============================================================
+
+// buildscript resolves the Gradle plugins used by all subprojects.
+// These must be declared here (not in gradletools.gradle) because
+// the classpath is resolved before any applied scripts are loaded.
 buildscript {
     repositories {
-        maven { url = 'https://maven.minecraftforge.net/' }
-        maven { url = 'https://maven.parchmentmc.org' }
-        maven { url = 'https://plugins.gradle.org/m2/' }
-        maven { url = 'https://repo.spongepowered.org/maven' }
+        maven { url = 'https://maven.minecraftforge.net/' }    // ForgeGradle
+        maven { url = 'https://maven.parchmentmc.org' }        // ParchmentMC (optional mappings)
+        maven { url = 'https://plugins.gradle.org/m2/' }       // Gradle plugin portal
+        maven { url = 'https://repo.spongepowered.org/maven' } // MixinGradle
         mavenCentral()
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '6.0.+', changing: true
-        classpath 'org.parchmentmc:librarian:1.+'
-        classpath 'org.spongepowered:mixingradle:0.7.+'
+        classpath 'org.parchmentmc:librarian:1.+'   // Enables ParchmentMC mappings via minecraftSetup(true)
+        classpath 'org.spongepowered:mixingradle:0.7.+' // Enables mixinSetup() in subprojects
     }
 }
 
+// Apply the required plugins to every subproject so they are
+// available before each subproject's build.gradle runs.
 subprojects {
-    apply plugin: 'net.minecraftforge.gradle'
-    apply plugin: 'org.parchmentmc.librarian.forgegradle'
-    apply plugin: 'eclipse'
-    apply plugin: 'maven-publish'
-    apply plugin: 'org.spongepowered.mixin'
+    apply plugin: 'net.minecraftforge.gradle'              // Forge mod development support
+    apply plugin: 'org.parchmentmc.librarian.forgegradle'  // ParchmentMC mappings support
+    apply plugin: 'eclipse'                                // Eclipse IDE integration
+    apply plugin: 'maven-publish'                          // Maven artifact publishing
+    apply plugin: 'org.spongepowered.mixin'                // Mixin source set configuration
 }
