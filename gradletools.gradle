@@ -16,7 +16,7 @@
 // subproject build.gradle before any dependency declarations.
 ext.repos = {
     repositories {
-        maven { url = "https://dvs1.progwml6.com/files/maven" }      // JEI (legacy mirror)
+        maven { url = "https://dvs1.progwml6.com/files/maven" }       // JEI (legacy mirror)
         maven { url = "https://maven.blamejared.com" }                // Patchouli, bookshelf, gamestages, JEI
         maven { url = "https://modmaven.dev/" }                       // McJtyLib, TOP
         maven { url = "https://maven.k-4u.nl" }                       // McJtyLib, TOP (alt)
