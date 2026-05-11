@@ -152,6 +152,25 @@ ext.configureRun = { runConfig ->
 }
 
 
+// ── Additional Run Mixin Configs ──────────────────────────────
+// Injects --mixin.config args for dependency mods whose mixin
+// configs are not automatically picked up by MixinGradle.
+// Call after minecraftSetup() for any project that includes
+// another mod's sourceSets in its runs.
+//
+// Example:
+//   addRunMixinConfigs(
+//       project(":TechCore").findProperty('mod_mixins_config_location') as String
+//   )
+ext.addRunMixinConfigs = { String... configs ->
+    minecraft.runs.each { run ->
+        configs.each { cfg ->
+            run.args '--mixin.config', cfg
+        }
+    }
+}
+
+
 // ── JAR Manifest ──────────────────────────────────────────────
 // Embeds mod metadata (ID, version, author, timestamp) into the
 // built JAR manifest. Call ext.jars() after minecraftSetup().
