@@ -29,3 +29,7 @@ run/
 !/gradle/wrapper/gradle-wrapper.jar
 /CLAUDE.md
 /.claude/settings.local.json
+/.serena
+/AGENTS.md
+/.ai/mcp/mcp.json
+/.agents

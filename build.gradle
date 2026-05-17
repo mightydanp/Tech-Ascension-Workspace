@@ -25,7 +25,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '6.0.+', changing: true
+        classpath "net.minecraftforge.gradle:ForgeGradle:6.0.+"
         classpath 'org.parchmentmc:librarian:1.+'   // Enables ParchmentMC mappings via minecraftSetup(true)
         classpath 'org.spongepowered:mixingradle:0.7.+' // Enables mixinSetup() in subprojects
     }
