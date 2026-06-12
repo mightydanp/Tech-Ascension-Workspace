@@ -1,21 +1,14 @@
-MIT License
+========================================================================
+PART 1: ORIGINAL MOD CODE AND ASSETS
+PROPRIETARY AND ALL RIGHTS RESERVED
+===================================
 
-Copyright (c) 2019 McJtyMods
+Copyright (c) 2026 @mightydanp. All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This license applies only to the original source code, compiled binaries, configuration files, textures, models, sounds, and other assets created by @mightydanp for this modification.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+You may not copy, modify, redistribute, republish, sublicense, sell, reverse engineer, decompile, disassemble, or create derivative works based on this original software or its original assets without explicit prior written permission from the copyright holder.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+This restriction does not apply to third-party code, libraries, APIs, tools, or assets that are included with, linked by, referenced by, or required by this project. Those materials remain subject to their respective licenses.
+
+Any portions of this project derived from MIT-licensed software remain subject to the applicable MIT License terms, including the requirement to preserve the original copyright notice and license text.
